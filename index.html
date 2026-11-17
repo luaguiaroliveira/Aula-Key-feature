@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Key feature analysis (Análise de KF)</title>
+  <script>document.documentElement.classList.add("js");</script>
+  <style>
+    :root {
+      --fg: #1a1a1a;
+      --muted: #6b6b6b;
+      --accent: #e8622c;
+      --accent-dark: #c0501f;
+      --accent-soft: #fbeade;
+      --line: #e6e1da;
+      --bg: #f4f1ec;
+      --card: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.45;
+    }
+
+    .deck {
+      position: relative;
+    }
+
+    .slide {
+      display: block;
+      padding: 5vh 8vw;
+      background: var(--card);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .js .deck {
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .js .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      border-bottom: none;
+      overflow-y: auto;
+    }
+
+    .js .slide.active {
+      display: flex;
+    }
+
+    .slide .inner {
+      max-width: 1080px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: clamp(2.1rem, 4vw, 3.2rem);
+      margin: 0 0 .4em;
+      line-height: 1.15;
+    }
+
+    h2 {
+      font-size: clamp(1.6rem, 2.9vw, 2.5rem);
+      margin: 0 0 .7em;
+      line-height: 1.15;
+      color: var(--accent-dark);
+    }
+
+    h3 {
+      font-size: clamp(1.15rem, 1.9vw, 1.55rem);
+      margin: 1em 0 .4em;
+      color: var(--accent-dark);
+    }
+
+    p {
+      font-size: clamp(1.15rem, 1.9vw, 1.65rem);
+      margin: .5em 0;
+    }
+
+    ul,
+    ol {
+      font-size: clamp(1.2rem, 2vw, 1.8rem);
+      margin: .4em 0 .4em 1.1em;
+      padding: 0;
+    }
+
+    li {
+      margin: .38em 0;
+    }
+
+    li>ul {
+      margin-top: .3em;
+      font-size: .95em;
+    }
+
+    strong {
+      color: #111;
+    }
+
+    .lead {
+      font-size: clamp(1.2rem, 1.9vw, 1.7rem);
+      color: var(--muted);
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: clamp(1rem, 1.5vw, 1.3rem);
+    }
+
+    .tag {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      border-radius: 6px;
+      padding: .12em .5em;
+      font-size: .82em;
+      font-weight: 600;
+    }
+
+    .cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.4vw;
+    }
+
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: .8em 1em;
+      background: #faf7f3;
+    }
+
+    .box h3 {
+      margin-top: 0;
+    }
+
+    .refs li {
+      font-size: clamp(.9rem, 1.25vw, 1.1rem);
+    }
+
+    /* title + section slides */
+    .slide.title {
+      background: linear-gradient(135deg, #e8622c, #c0501f);
+      color: #fff;
+    }
+
+    .slide.title h1 {
+      color: #fff;
+    }
+
+    .slide.title .lead,
+    .slide.title .sub {
+      color: #fbe3d5;
+    }
+
+    .slide.section {
+      background: #f7f2ec;
+      color: var(--fg);
+    }
+
+    .slide.section .inner {
+      border-left: 6px solid var(--accent);
+      padding-left: 1.4rem;
+    }
+
+    .slide.section .kicker {
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-size: .8rem;
+      color: var(--accent);
+      margin-bottom: .6em;
+    }
+
+    .slide.section h2 {
+      color: var(--accent-dark);
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      margin: 0;
+    }
+
+    /* data tables */
+    .data-table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: .4em 0;
+      font-size: clamp(.85rem, 1.5vw, 1.25rem);
+    }
+
+    .data-table th,
+    .data-table td {
+      border: 1px solid var(--line);
+      padding: .3em .55em;
+      text-align: center;
+    }
+
+    .data-table th {
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+    }
+
+    .data-table td:first-child,
+    .data-table th:first-child {
+      text-align: left;
+      font-weight: 600;
+    }
+
+    /* diverging bar chart */
+    .divchart {
+      margin: .6em 0;
+    }
+
+    .divchart .row {
+      display: grid;
+      grid-template-columns: 5em 1fr 3.4em;
+      align-items: center;
+      gap: .6em;
+      margin: .4em 0;
+    }
+
+    .divchart .fname {
+      text-align: right;
+      font-weight: 600;
+      color: var(--accent-dark);
+      font-size: clamp(.9rem, 1.4vw, 1.2rem);
+    }
+
+    .divchart .track {
+      position: relative;
+      height: 26px;
+      background: #f2ece4;
+      border-radius: 4px;
+    }
+
+    .divchart .track::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -3px;
+      bottom: -3px;
+      width: 2px;
+      background: #9a938a;
+    }
+
+    .divchart .bar {
+      position: absolute;
+      top: 3px;
+      height: 20px;
+      border-radius: 3px;
+    }
+
+    .divchart .bar.pos {
+      left: 50%;
+      background: var(--accent);
+    }
+
+    .divchart .bar.neg {
+      right: 50%;
+      background: #2b7bb9;
+    }
+
+    .divchart .val {
+      text-align: right;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(.9rem, 1.4vw, 1.2rem);
+    }
+
+    .divchart .legend {
+      display: flex;
+      gap: 1.4em;
+      justify-content: center;
+      margin-top: .7em;
+      font-size: .95em;
+      color: var(--muted);
+    }
+
+    .divchart .legend span::before {
+      content: "";
+      display: inline-block;
+      width: .8em;
+      height: .8em;
+      border-radius: 2px;
+      margin-right: .35em;
+      vertical-align: -1px;
+    }
+
+    .divchart .legend .u::before {
+      background: var(--accent);
+    }
+
+    .divchart .legend .c::before {
+      background: #2b7bb9;
+    }
+
+    /* transitions */
+    @keyframes reveal {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    @keyframes fadeSlide {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .js .slide.active {
+      animation: fadeSlide .3s ease both;
+    }
+
+    .js .slide.active .inner>h1,
+    .js .slide.active .inner>h2,
+    .js .slide.active .inner>.kicker {
+      animation: reveal .4s ease both;
+    }
+
+    .js .frag {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .js .frag.shown {
+      opacity: 1;
+      transform: none;
+    }
+
+    .js.anim-ready .frag {
+      transition: opacity .35s ease, transform .35s ease;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+
+      .js .slide.active,
+      .js .slide.active .inner>* {
+        animation: none !important;
+      }
+
+      .js .frag {
+        transition: none !important;
+      }
+    }
+
+    /* chrome */
+    .progress {
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      height: 4px;
+      width: 100%;
+      background: rgba(0, 0, 0, .08);
+      z-index: 20;
+    }
+
+    .progress .bar {
+      height: 100%;
+      width: 0;
+      background: var(--accent);
+      transition: width .2s ease;
+    }
+
+    .counter {
+      position: fixed;
+      right: 16px;
+      bottom: 12px;
+      font-size: .85rem;
+      color: var(--muted);
+      z-index: 20;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .nav {
+      position: fixed;
+      left: 16px;
+      bottom: 10px;
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav button {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      border-radius: 8px;
+      width: 34px;
+      height: 30px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .nav button:hover {
+      border-color: var(--accent);
+      color: var(--accent-dark);
+    }
+
+    .hint {
+      position: fixed;
+      left: 16px;
+      top: 12px;
+      font-size: .78rem;
+      color: var(--muted);
+      z-index: 20;
+    }
+
+    @media (max-width: 720px) {
+      .cols {
+        grid-template-columns: 1fr;
+      }
+
+      .slide {
+        padding: 6vh 7vw;
+      }
+    }
+
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      body {
+        background: #fff;
+      }
+
+      .js .deck {
+        height: auto;
+        overflow: visible;
+      }
+
+      .js .slide {
+        display: flex !important;
+        position: static;
+        height: 100vh;
+        min-height: 0;
+        padding: 1.4cm 1.8cm;
+        page-break-after: always;
+        break-after: page;
+        justify-content: center;
+      }
+
+      .js .slide:last-of-type {
+        page-break-after: auto;
+        break-after: auto;
+      }
+
+      .js .slide .inner>* {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+
+      .js .frag {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+
+      .progress,
+      .counter,
+      .nav,
+      .hint {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hint">← → para navegar · F para tela cheia</div>
+  <div class="deck">
+
+    <section class="slide title">
+      <div class="inner">
+        <h1>Key feature analysis (Análise de KF)</h1>
+        <p class="lead">Registro, corpus, taggers e análise situacional</p>
+        <p class="sub">Aula 1</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Roteiro</h2>
+        <ol>
+          <li>Recapitulação: <strong>análise de registro</strong></li>
+          <li><strong>Escolha do corpus</strong></li>
+          <li><strong>Taggers</strong>: o que são, como funcionam, opções e uso no TTWtools</li>
+          <li><strong>Análise situacional</strong></li>
+          <li><strong>Análise de KF</strong> (TTWtools)</li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="slide section">
+      <div class="inner">
+        <div class="kicker">Parte 1</div>
+        <h2>Análise de registro (recapitulação)</h2>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>O que é registro</h2>
+        <ul>
+          <li><strong>Registro</strong>, de acordo com a perspectiva que estamos adotando (Biber &amp; Conrad, 2009), é
+            uma variedade textual associada a uma <strong>situação particular de uso</strong>, com propósitos
+            comunicativos próprios.</li>
+          <li>Qualquer variedade de texto pode ser descrita sob a <strong>perspectiva de registro</strong>.</li>
+          <li>Descrição em três componentes:
+            <ul>
+              <li>o <strong>contexto situacional</strong>;</li>
+              <li>as <strong>características linguísticas</strong>;</li>
+              <li>as <strong>relações funcionais</strong> entre os dois.</li>
+            </ul>
+          </li>
+          <li>Premissa central: os recursos linguísticos são <strong>funcionais</strong>, não aleatórios.</li>
+        </ul>
+        <p class="sub">Registro se distingue de <em>gênero</em> (convenções retóricas) e de <em>estilo</em> (escolhas do
+          autor).</p>
+      </div>
+    </section>
+
+    <section class="slide section">
+      <div class="inner">
+        <div class="kicker">Parte 2</div>
+        <h2>Escolha do corpus</h2>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Decisões iniciais</h2>
+        <ul>
+          <li>A KF compara <strong>duas variedades</strong>: precisamos de dois (sub)corpora.</li>
+
+          <li>Manter o mesmo <strong>registro macro</strong> e variar a característica de interesse?</li>
+          <li>Ou: comparar <strong>registros diferentes</strong>?</li>
+          <li>Ideias do grupo:</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide section">
+      <div class="inner">
+        <div class="kicker">Parte 3</div>
+        <h2>Taggers</h2>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>3.1 O que são</h2>
+        <ul>
+          <li>Taggers são <strong>etiquetadores automáticos</strong>.</li>
+          <li>Anotam cada palavra com informação linguística (classe gramatical e/ou features léxico-gramaticais).</li>
+          <li>Transformam <strong>texto bruto</strong> em <strong>dados estruturados</strong> e quantificáveis.</li>
+          <li>São a base para <strong>contar e comparar</strong> features entre corpora.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>3.2 Como funcionam</h2>
+        <ul>
+          <li><strong>Tokenização</strong>: dividir o texto em unidades (tokens).</li>
+          <li><strong>Atribuição de etiquetas</strong>: cada token recebe uma tag (ex.: NN, VBD, PRP). Existem
+            diferentes tipos de etiquetadores.</li>
+          <li>Métodos: regras + léxico; estatístico (aprendizado de máquina); neural.</li>
+          <li>O <strong>conjunto de etiquetas (tagset)</strong> varia: como escolher?</li>
+          <li>Há erros de anotação → <strong>revisar e ajustar</strong>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>3.3 Opções disponíveis</h2>
+        <div class="cols">
+          <div class="box">
+            <h3>Foco em features funcionais (taggers baseados no BiberTagger)</h3>
+            <ul>
+              <li><strong>BiberPlus</strong>: cerca de 91 tags funcionais (estruturas sintáticas, classes e marcadores).
+              </li>
+              <li><strong>MFTE</strong> (Multi-Feature Tagger of English).</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>NLP geral</h3>
+            <ul>
+              <li><strong>spaCy</strong> </li>
+              <li><strong>Stanza</strong>: POS e dependências, rápidos e multilíngues.</li>
+
+          </div>
+        </div>
+        <p class="sub">A escolha depende do objetivo: features funcionais do quadro de Biber vs. anotação geral.</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>3.4 Como usar no TTWtools</h2>
+        <ol>
+          <li>Importar os textos e criar o projeto.</li>
+          <li>Escolher o <strong>tagger</strong> (ex.: BiberPlus).</li>
+          <li>Rodar a <strong>anotação automática</strong>.</li>
+          <li>Anotações e matrizes salvas em banco <strong>SQLite</strong> (<code>.ttwa</code>).</li>
+          <li>Contagens <strong>brutas</strong> e <strong>normalizadas</strong> por 1.000 palavras.</li>
+
+        </ol>
+      </div>
+    </section>
+
+    <section class="slide section">
+      <div class="inner">
+        <div class="kicker">Parte 4</div>
+        <h2>Análise situacional</h2>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Parâmetros (Biber &amp; Conrad, 2009)</h2>
+        <ul>
+          <li><strong>Participantes</strong>: emissor e destinatário.</li>
+          <li><strong>Relações</strong>: papéis sociais, interatividade, distância social.</li>
+          <li><strong>Canal</strong>: falado/escrito e meio específico.</li>
+          <li><strong>Circunstâncias de produção</strong>: planejado, editado, tempo real.</li>
+          <li><strong>Cenário</strong>: tempo, lugar e ambiente.</li>
+          <li><strong>Propósitos comunicativos</strong>: geral, específico, factualidade e expressão de stance.</li>
+          <li><strong>Tópico</strong>: domínio geral e foco específico.</li>
+        </ul>
+        <p class="sub">A descrição da situação precede a descrição dos features linguísticos.</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Exemplo: Coursera vs. Udemy</h2>
+        <div class="cols">
+          <div class="box">
+            <h3>Coursera</h3>
+            <ul>
+              <li>Institucional e formal; distância social maior.</li>
+              <li>Documentar credenciais e filiações.</li>
+              <li>Voz impessoal (3ª pessoa).</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Udemy</h3>
+            <ul>
+              <li>Mercado aberto, informal, proximidade.</li>
+              <li>Credibilidade e venda do curso.</li>
+              <li>Contato direto e pessoal (1ª e 2ª pessoa).</li>
+            </ul>
+          </div>
+        </div>
+        <p class="sub">A situação prevê diferenças linguísticas e orienta a interpretação funcional dos resultados.</p>
+      </div>
+    </section>
+
+    <section class="slide section">
+      <div class="inner">
+        <div class="kicker">Parte 5</div>
+        <h2>Análise de KF</h2>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>O que é análise de KF</h2>
+        <ul>
+          <li>Método <strong>quantitativo e exploratório</strong> (Egbert &amp; Biber, 2023).</li>
+          <li>Identifica as <strong>features léxico-gramaticais funcionais</strong> que distinguem duas variedades.</li>
+          <li>Usa <strong>Cohen's <em>d</em></strong> (tamanho de efeito), não uma decisão sim/não de significância.
+          </li>
+          <li>Analisa <strong>por texto</strong> e reporta em <strong>escala contínua</strong>.</li>
+          <li>Difere de <em>keyword</em> (palavras, corpus inteiro, sim/não) e de <em>key POS</em>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide section">
+      <div class="inner">
+        <div class="kicker">Prática</div>
+        <h2>Exercícios: uma KF na mão</h2>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Contagens brutas x taxas</h2>
+        <ul>
+          <li><strong>Contagem bruta</strong> (raw count): número de vezes que a feature ocorre no texto.</li>
+          <li>Contagens brutas <strong>não são comparáveis</strong>: textos mais longos tendem a ter contagens maiores.
+          </li>
+          <li>A normalização é feita <strong>por texto</strong>: o denominador é o <strong>número total de palavras do
+              próprio texto</strong>.</li>
+          <li>Fórmula: taxa = (contagem bruta ÷ nº total de palavras do texto) × 1.000.</li>
+          <li>Assim, comparamos textos de tamanhos diferentes na <strong>mesma escala</strong>.</li>
+        </ul>
+        <div class="box">
+          <p>taxa por 1.000 = (contagem bruta ÷ nº total de palavras do texto) × 1.000</p>
+          <p><strong>Exemplo (U1):</strong> 8 pronomes de 1ª pessoa e 155 palavras no texto → 8 ÷ 155 × 1.000 =
+            <strong>51,6</strong>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Contagens brutas: Corpus 1 (Udemy)</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Texto</th>
+              <th>Palavras</th>
+              <th>FPP1</th>
+              <th>JJ</th>
+              <th>NOMZ</th>
+              <th>EMPH</th>
+              <th>QUAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>U1</td>
+              <td>155</td>
+              <td>8</td>
+              <td>9</td>
+              <td>10</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>U2</td>
+              <td>96</td>
+              <td>1</td>
+              <td>8</td>
+              <td>1</td>
+              <td>0</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>U3</td>
+              <td>140</td>
+              <td>1</td>
+              <td>10</td>
+              <td>4</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>U4</td>
+              <td>99</td>
+              <td>0</td>
+              <td>4</td>
+              <td>5</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>U5</td>
+              <td>80</td>
+              <td>5</td>
+              <td>6</td>
+              <td>0</td>
+              <td>1</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>U6</td>
+              <td>121</td>
+              <td>1</td>
+              <td>10</td>
+              <td>3</td>
+              <td>2</td>
+              <td>2</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="sub">Contagens brutas (números inteiros) e total de palavras por texto.</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Contagens brutas: Corpus 2 (Coursera)</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Texto</th>
+              <th>Palavras</th>
+              <th>FPP1</th>
+              <th>JJ</th>
+              <th>NOMZ</th>
+              <th>EMPH</th>
+              <th>QUAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>C1</td>
+              <td>104</td>
+              <td>0</td>
+              <td>6</td>
+              <td>3</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>C2</td>
+              <td>141</td>
+              <td>0</td>
+              <td>5</td>
+              <td>3</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>C3</td>
+              <td>106</td>
+              <td>0</td>
+              <td>2</td>
+              <td>4</td>
+              <td>0</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>C4</td>
+              <td>131</td>
+              <td>1</td>
+              <td>6</td>
+              <td>15</td>
+              <td>2</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>C5</td>
+              <td>110</td>
+              <td>0</td>
+              <td>11</td>
+              <td>2</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+            <tr>
+              <td>C6</td>
+              <td>143</td>
+              <td>0</td>
+              <td>6</td>
+              <td>6</td>
+              <td>0</td>
+              <td>0</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="sub">Contagens brutas (números inteiros) e total de palavras por texto.</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Dados: Corpus 1 (Udemy)</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Texto</th>
+              <th>FPP1</th>
+              <th>JJ</th>
+              <th>NOMZ</th>
+              <th>EMPH</th>
+              <th>QUAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>U1</td>
+              <td>51,6</td>
+              <td>58,1</td>
+              <td>64,5</td>
+              <td>0,0</td>
+              <td>0,0</td>
+            </tr>
+            <tr>
+              <td>U2</td>
+              <td>10,4</td>
+              <td>83,3</td>
+              <td>10,4</td>
+              <td>0,0</td>
+              <td>10,4</td>
+            </tr>
+            <tr>
+              <td>U3</td>
+              <td>7,1</td>
+              <td>71,4</td>
+              <td>28,6</td>
+              <td>0,0</td>
+              <td>0,0</td>
+            </tr>
+            <tr>
+              <td>U4</td>
+              <td>0,0</td>
+              <td>40,4</td>
+              <td>50,5</td>
+              <td>0,0</td>
+              <td>0,0</td>
+            </tr>
+            <tr>
+              <td>U5</td>
+              <td>62,5</td>
+              <td>75,0</td>
+              <td>0,0</td>
+              <td>12,5</td>
+              <td>0,0</td>
+            </tr>
+            <tr>
+              <td>U6</td>
+              <td>8,3</td>
+              <td>82,6</td>
+              <td>24,8</td>
+              <td>16,5</td>
+              <td>16,5</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="sub">Taxas por 1.000 palavras. FPP1 = pronomes de 1ª pessoa; JJ = adjetivos; NOMZ = nominalizações;
+          EMPH = ênfase; QUAN = quantificadores.</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Dados: Corpus 2 (Coursera)</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Texto</th>
+              <th>FPP1</th>
+              <th>JJ</th>
+              <th>NOMZ</th>
+              <th>EMPH</th>
+              <th>QUAN</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>C1</td>
+              <td>0,0</td>
+              <td>57,7</td>
+              <td>28,8</td>
+              <td>0,0</td>
+              <td>0,0</td>
+            </tr>
+            <tr>
+              <td>C2</td>
+              <td>0,0</td>
+              <td>35,5</td>
+              <td>21,3</td>
+              <td>0,0</td>
+              <td>0,0</td>
+            </tr>
+            <tr>
+              <td>C3</td>
+              <td>0,0</td>
+              <td>18,9</td>
+              <td>37,7</td>
+              <td>0,0</td>
+              <td>9,4</td>
+            </tr>
+            <tr>
+              <td>C4</td>
+              <td>7,6</td>
+              <td>45,8</td>
+              <td>114,5</td>
+              <td>15,3</td>
+              <td>15,3</td>
+            </tr>
+            <tr>
+              <td>C5</td>
+              <td>0,0</td>
+              <td>100,0</td>
+              <td>18,2</td>
+              <td>0,0</td>
+              <td>0,0</td>
+            </tr>
+            <tr>
+              <td>C6</td>
+              <td>0,0</td>
+              <td>42,0</td>
+              <td>42,0</td>
+              <td>0,0</td>
+              <td>0,0</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="sub">Mesmas features e mesma unidade (por 1.000 palavras). Corpus 1 = Udemy; Corpus 2 = Coursera.</p>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Passos 1 a 3: calcular o d</h2>
+        <ul>
+          <li><strong>Passo 1.</strong> Para cada feature, calcule a <strong>média</strong> (M) das taxas em cada
+            corpus.</li>
+          <li><strong>Passo 2.</strong> Calcule o <strong>desvio-padrão</strong> (SD) de cada feature em cada corpus.
+          </li>
+          <li><strong>Passo 3.</strong> Calcule o SDpooled e o <em>d</em> de Cohen.</li>
+        </ul>
+        <div class="box">
+          <p>M = (x₁ + … + x₆) / 6</p>
+          <p>SD = √[ Σ(x − M)² / (n − 1) ]</p>
+          <p>SDpooled = √[ (SD₁² + SD₂²) / 2 ]</p>
+          <p>d = (M₁ − M₂) / SDpooled</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Passos 4 e 5: interpretar e plotar</h2>
+        <ul>
+          <li><strong>Passo 4.</strong> Interprete cada <em>d</em>:
+            <ul>
+              <li>o <strong>sinal</strong>: positivo → mais no Corpus 1 (Udemy); negativo → mais no Corpus 2 (Coursera);
+              </li>
+              <li>o <strong>tamanho</strong> de |d|: &lt; 0,20 não key; ≈ 0,20 pequeno; ≈ 0,50 médio; ≥ 0,80 grande.
+              </li>
+            </ul>
+          </li>
+          <li><strong>Passo 5.</strong> Plote um <strong>gráfico de barras divergentes</strong>: eixo central em 0;
+            barras à direita (laranja) = Udemy; à esquerda (azul) = Coursera.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Respostas: médias e desvios-padrão</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>M Udemy</th>
+              <th>SD Udemy</th>
+              <th>M Coursera</th>
+              <th>SD Coursera</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>FPP1</td>
+              <td>23,3</td>
+              <td>26,6</td>
+              <td>1,3</td>
+              <td>3,1</td>
+            </tr>
+            <tr>
+              <td>JJ</td>
+              <td>68,5</td>
+              <td>16,5</td>
+              <td>50,0</td>
+              <td>27,6</td>
+            </tr>
+            <tr>
+              <td>NOMZ</td>
+              <td>29,8</td>
+              <td>24,2</td>
+              <td>43,7</td>
+              <td>35,8</td>
+            </tr>
+            <tr>
+              <td>EMPH</td>
+              <td>4,8</td>
+              <td>7,6</td>
+              <td>2,6</td>
+              <td>6,2</td>
+            </tr>
+            <tr>
+              <td>QUAN</td>
+              <td>4,5</td>
+              <td>7,2</td>
+              <td>4,1</td>
+              <td>6,6</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Respostas: d e interpretação</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>SDpooled</th>
+              <th>d</th>
+              <th>Leitura</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>FPP1</td>
+              <td>18,9</td>
+              <td>+1,16</td>
+              <td>grande (Udemy)</td>
+            </tr>
+            <tr>
+              <td>JJ</td>
+              <td>22,8</td>
+              <td>+0,81</td>
+              <td>grande (Udemy)</td>
+            </tr>
+            <tr>
+              <td>NOMZ</td>
+              <td>30,6</td>
+              <td>−0,46</td>
+              <td>médio (Coursera)</td>
+            </tr>
+            <tr>
+              <td>EMPH</td>
+              <td>7,0</td>
+              <td>+0,33</td>
+              <td>pequeno (Udemy)</td>
+            </tr>
+            <tr>
+              <td>QUAN</td>
+              <td>6,9</td>
+              <td>+0,05</td>
+              <td>não key</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Respostas: barras divergentes</h2>
+        <div class="divchart">
+          <div class="row"><span class="fname">FPP1</span>
+            <div class="track">
+              <div class="bar pos" style="width:48%"></div>
+            </div><span class="val">+1,16</span>
+          </div>
+          <div class="row"><span class="fname">JJ</span>
+            <div class="track">
+              <div class="bar pos" style="width:34%"></div>
+            </div><span class="val">+0,81</span>
+          </div>
+          <div class="row"><span class="fname">EMPH</span>
+            <div class="track">
+              <div class="bar pos" style="width:14%"></div>
+            </div><span class="val">+0,33</span>
+          </div>
+          <div class="row"><span class="fname">QUAN</span>
+            <div class="track">
+              <div class="bar pos" style="width:2%"></div>
+            </div><span class="val">+0,05</span>
+          </div>
+          <div class="row"><span class="fname">NOMZ</span>
+            <div class="track">
+              <div class="bar neg" style="width:19%"></div>
+            </div><span class="val">−0,46</span>
+          </div>
+          <div class="legend">
+            <span class="u">Udemy (Corpus 1)</span>
+            <span class="c">Coursera (Corpus 2)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Próximos passos (aula 2)</h2>
+        <ul>
+          <li>Abrir o <strong>TTWtools</strong> e rodar a análise ao vivo.</li>
+          <li>Ver os passos do cálculo e a leitura do <em>d</em>.</li>
+          <li>Depois: <strong>interpretação funcional</strong> das features que distinguem os corpora.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="inner">
+        <h2>Referências</h2>
+        <ul class="refs">
+          <li>Biber, D. (1988). <em>Variation across Speech and Writing</em>. Cambridge University Press.</li>
+          <li>Biber, D., &amp; Conrad, S. (2009). <em>Register, Genre, and Style</em>. Cambridge University Press.</li>
+          <li>Egbert, J., &amp; Biber, D. (2023). Key feature analysis. <em>Corpora</em>, 18(1), 121-133.</li>
+          <li>Le Foll, E., &amp; Shakir, M. (2024). Multi-Feature Tagger of English.</li>
+          <li>Alkiek, et al. (2025). BiberPlus.</li>
+          <li>Rayson, P. (2008). From key words to key semantic domains.</li>
+          <li>Scott, M. (1997). PC analysis of key words.</li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="progress">
+    <div class="bar" id="bar"></div>
+  </div>
+  <div class="counter" id="counter">1 / 1</div>
+  <div class="nav">
+    <button id="prev" aria-label="Anterior">&#8592;</button>
+    <button id="next" aria-label="Próximo">&#8594;</button>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+      var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+      var bar = document.getElementById("bar");
+      var counter = document.getElementById("counter");
+      var current = 0;
+
+      function clamp(n) { return Math.max(0, Math.min(slides.length - 1, n)); }
+
+      function collectFragments(slide) {
+        var inner = slide.querySelector(".inner");
+        var out = [];
+        if (!inner) { return out; }
+        Array.prototype.forEach.call(inner.children, function (child) {
+          if (child.matches("ul, ol")) {
+            Array.prototype.forEach.call(child.children, function (li) {
+              li.classList.add("frag");
+              out.push(li);
+            });
+          } else if (child.matches("p, .cols, .box")) {
+            child.classList.add("frag");
+            out.push(child);
+          }
+        });
+        return out;
+      }
+
+      var fragsBySlide = slides.map(collectFragments);
+      var shownBySlide = slides.map(function () { return 0; });
+
+      function applyFragments(k) {
+        var frags = fragsBySlide[k];
+        for (var j = 0; j < frags.length; j++) {
+          frags[j].classList.toggle("shown", j < shownBySlide[k]);
+        }
+      }
+
+      function render() {
+        slides.forEach(function (s, k) { s.classList.toggle("active", k === current); });
+        applyFragments(current);
+        bar.style.width = ((current + 1) / slides.length * 100) + "%";
+        counter.textContent = (current + 1) + " / " + slides.length;
+        try {
+          if (history.replaceState) { history.replaceState(null, "", "#" + (current + 1)); }
+        } catch (err) { /* file:// pode bloquear; ignora */ }
+      }
+
+      function go(n) {
+        current = clamp(n);
+        shownBySlide[current] = fragsBySlide[current].length;
+        render();
+      }
+
+      function next() {
+        if (shownBySlide[current] < fragsBySlide[current].length) {
+          shownBySlide[current]++;
+          applyFragments(current);
+          return;
+        }
+        if (current < slides.length - 1) { current++; render(); }
+      }
+
+      function prev() {
+        if (shownBySlide[current] > 0) {
+          shownBySlide[current]--;
+          applyFragments(current);
+          return;
+        }
+        if (current > 0) { current--; render(); }
+      }
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") {
+          e.preventDefault(); next();
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "PageUp") {
+          e.preventDefault(); prev();
+        } else if (e.key === "Home") { e.preventDefault(); go(0); }
+        else if (e.key === "End") { e.preventDefault(); go(slides.length - 1); }
+        else if (e.key === "f" || e.key === "F") {
+          if (!document.fullscreenElement) { document.documentElement.requestFullscreen(); }
+          else { document.exitFullscreen(); }
+        }
+      });
+
+      document.getElementById("next").addEventListener("click", next);
+      document.getElementById("prev").addEventListener("click", prev);
+
+      var start = parseInt((location.hash || "").replace("#", ""), 10);
+      current = clamp(isNaN(start) ? 0 : start - 1);
+      shownBySlide[current] = fragsBySlide[current].length;
+      render();
+      document.documentElement.classList.add("anim-ready");
+    })();
+  </script>
+</body>
+
+</html>
